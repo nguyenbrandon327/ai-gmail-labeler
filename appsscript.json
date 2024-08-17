@@ -1,0 +1,37 @@
+{
+    "timeZone": "America/New_York",
+    "dependencies": {},
+    "exceptionLogging": "STACKDRIVER",
+    "runtimeVersion": "V8",
+    "addOns": {
+      "common": {
+        "name": "Gmail AI Label Assistant",
+        "logoUrl": "https://www.example.com/logo.png",
+        "useLocaleFromApp": true,
+        "homepageTrigger": {
+          "runFunction": "onHomepage"
+        }
+      },
+      "gmail": {
+        "homepageTrigger": {
+          "runFunction": "onHomepage"
+        },
+        "contextualTriggers": [
+          {
+            "unconditional": {},
+            "onTriggerFunction": "onGmailMessage"
+          }
+        ]
+      }
+    },
+    "oauthScopes": [
+      "https://www.googleapis.com/auth/gmail.addons.execute",
+      "https://www.googleapis.com/auth/gmail.labels",
+      "https://www.googleapis.com/auth/gmail.modify",
+      "https://www.googleapis.com/auth/script.external_request",
+      "https://www.googleapis.com/auth/script.locale"
+    ],
+    "urlFetchWhitelist": [
+      "https://www.googleapis.com/"
+    ]
+  }
