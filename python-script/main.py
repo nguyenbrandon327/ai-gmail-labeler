@@ -1,4 +1,15 @@
-import os.path
+#################################################################################################
+#################################################################################################
+
+# NOTES #
+# more than likely, if we are to use one entire list for all entities, better to use a set for lack of duplicates and efficiency
+# for more advanced usage, can train a custom pipeline to check for our custom entities
+# for now, using the pretrained model for ease of use
+# also need to check how connectivity works for account linking and inbox access
+
+#################################################################################################
+#################################################################################################
+
 import base64 #for decoding message parts
 from pyquery import PyQuery as pquery
 import requests
@@ -18,7 +29,9 @@ SCOPES =
 ]
 
 #function processes each entity within the document tied to the content, then
-# prints the entity and the label associated with it
+# prints the entity and the label associated with it, then adds it to a list
+#returns list of all normal pretrained labels
+# takes a string (content) as a parameter
 def process_content(content):
      allLabels = []
      doc = nlp(content)
@@ -29,12 +42,11 @@ def process_content(content):
      print("All labels of ents in doc...")
      return allLabels
 
-     
-
 
 
 #function to process custom rule entities
 #userRules variable represents a List of custom rules from user input through add-on
+#takes content and userRules as parameters
 def process_rule_entities(content, userRules):
      allCustomLabels = []
      doc = nlp(content)
@@ -49,8 +61,11 @@ def process_rule_entities(content, userRules):
 
 
 
+
 # IMPLEMENT A FUNCTION HERE FOR CHECKING ENTITIES AND CUSTOM ENTITIES AGAINST DATABASE OF REQUESTED ENTITIES AND DESIRED ACTIONS
 # ex) Entity: "Internship"-->Action: "Star Mail" - - - - - Entity: "Food Subscription Email"-->Action: "Archive Mail"
+
+
 
 
 #function fetches the mail from the user's inbox, then processes the content
@@ -114,4 +129,10 @@ def fetch_mail():
 # Main function to run the script #
 #################################################################################################
 if __name__ == '__main__':
-     fetch_mail()
+     # one long string to check for entities
+     stringToProcess = fetch_mail()
+     # went with two separate functions for ease of debugging and testing, can combine later if needed
+     allNormalLabels = process_content(stringToProcess)
+     allCustomLabels = process_rule_entities(stringToProcess, userRulesInput) # where userRulesInput is a list of inputted custom rules 
+
+

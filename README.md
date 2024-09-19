@@ -14,7 +14,12 @@ SpaCy (natural language processing library to create NER model)
 GMAIL API (to access user inbox)
 Google OAuth2.0 (to allow user sign in for data use)
 
-Dependencies used: (pip install)
-spacy google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+Dependencies used: 
+
+Need to Install:
+spacy google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client pyquery
+
+Do Not Need to Install:
+base64
 
 # ai-gmail-labeler
