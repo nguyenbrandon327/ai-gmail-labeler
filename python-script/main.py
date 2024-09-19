@@ -21,6 +21,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
 nlp = spacy.load("en_core_web_sm")
+matcher = Matcher(nlp.vocab)
 
 SCOPES = 
 [
@@ -44,6 +45,13 @@ def process_content(content):
 
 
 
+# checking function to see if the entity is a single word, if not, need to use matcher
+def singleWordCheck(wordInList):
+     word = wordInList.split()
+     return (len(word) == 1)
+
+
+
 #function to process custom rule entities
 #userRules variable represents a List of custom rules from user input through add-on
 #takes content and userRules as parameters
@@ -52,10 +60,14 @@ def process_rule_entities(content, userRules):
      doc = nlp(content)
      for rule in userRules:
           for ent in doc.ents:
-               if ent.text == rule:
-                    print(f"Custom rule entity found: {ent.text}")
-                    allCustomLabels.append(ent.text)
+               if singleWordCheck(ent.text):
+                    if ent.text == rule:
+                         print(f"Custom rule entity found: {ent.text}")
+                         allCustomLabels.append(ent.text)
+               else:
+                    # implement matching function here
      
+     # need to implement matchers for >1 word entity searching
      print("All custom rule entities found...")
      return allCustomLabels
 
