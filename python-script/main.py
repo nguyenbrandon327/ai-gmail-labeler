@@ -1,5 +1,6 @@
 import os.path
-import base64
+import base64 #for decoding message parts
+from pyquery import PyQuery as pquery
 import requests
 import spacy
 from google.auth.transport.requests import Request
@@ -19,9 +20,38 @@ SCOPES =
 #function processes each entity within the document tied to the content, then
 # prints the entity and the label associated with it
 def process_content(content):
+     allLabels = []
      doc = nlp(content)
      for ent in doc.ents:
           print(ent.text, ent.label_)
+          allLabels.append(ent.label_)
+     
+     print("All labels of ents in doc...")
+     return allLabels
+
+     
+
+
+
+#function to process custom rule entities
+#userRules variable represents a List of custom rules from user input through add-on
+def process_rule_entities(content, userRules):
+     allCustomLabels = []
+     doc = nlp(content)
+     for rule in userRules:
+          for ent in doc.ents:
+               if ent.text == rule:
+                    print(f"Custom rule entity found: {ent.text}")
+                    allCustomLabels.append(ent.text)
+     
+     print("All custom rule entities found...")
+     return allCustomLabels
+
+
+
+# IMPLEMENT A FUNCTION HERE FOR CHECKING ENTITIES AND CUSTOM ENTITIES AGAINST DATABASE OF REQUESTED ENTITIES AND DESIRED ACTIONS
+# ex) Entity: "Internship"-->Action: "Star Mail" - - - - - Entity: "Food Subscription Email"-->Action: "Archive Mail"
+
 
 #function fetches the mail from the user's inbox, then processes the content
 def fetch_mail():
@@ -43,17 +73,45 @@ def fetch_mail():
      messages = results.get('messages', [])
 
      if not messages:
-        print('No messages found.')
+          print('No messages found.')
     else:
-        print('Messages:')
-        for message in messages[:1]:  # Process 1 message FOR TESTING
+          print('Messages:')
+          for message in messages[:1]:  # Process 1 message FOR TESTING
                # Get the message from its id
-            msg = service.users().messages().get(userId='me', id=message['id']).execute()
-            # Get the message snippet
-            msg_snippet = msg['snippet']
-            print(f'Processing message snippet: {msg_snippet}')
-            process_content(msg_snippet)
+               msg = service.users().messages().get(userId='me', id=message['id']).execute()
+               # Get the message snippet
+                
+               #payload, which contains entire message
+               #parts, which contains the message parts in plain and html text
+
+               allMessageParts = ""
+
+               for part in msg['payload']['parts']:
+                    msg_snippet = ""
+                    textForDecode = part['body']['data']
+
+                    if part['mimeType'] == 'text/plain':
+                         decodedText = base64.urlsafe_b64decode(textForDecode).decode('utf-8').strip()
+                         msg_snippet = decodedText
+
+                    elif part['mimeType'] == 'text/html':
+                         decodedHTML = base64.urlsafe_b64decode(textForDecode).decode('utf-8') # decodes into readable HTML
+                         htmlDoc = pquery(decodedHTML) # parses the HTML using PyQuery
+                         htmlContent = htmlDoc('.content .text').text() # extracts the only content/text from HTML file
+                         msg_snippet = htmlContent.strip()
+
+                    allMessageParts += msg_snippet #concatenates all message parts for processing
+
+               print("Returning message parts...")
+               return allMessageParts
 
 
+
+
+
+
+#################################################################################################
+# Main function to run the script #
+#################################################################################################
 if __name__ == '__main__':
      fetch_mail()
