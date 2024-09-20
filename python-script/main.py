@@ -1,127 +1,29 @@
 #################################################################################################
 #################################################################################################
 
+# ALL FUNCTIONS STARTING WITH PRECHECK ARE FOR DEBUGGING AND TESTING PURPOSES
+# DO NOT USE FOR FINAL IMPLEMENTATION
+
 # NOTES #
 # more than likely, if we are to use one entire list for all entities, better to use a set for lack of duplicates and efficiency
 # for more advanced usage, can train a custom pipeline to check for our custom entities
 # for now, using the pretrained model for ease of use
 # also need to check how connectivity works for account linking and inbox access
 
+# IMPLEMENTATION #
+# will write debugging functions first for checking access to inbox and message retrieval
+# bc dont want to use api calls if not needed
+# using matchers for custom entities for std nlp pipeline
+# will train custom pipeline later
+
 #################################################################################################
 #################################################################################################
 
-import base64 #for decoding message parts
-from pyquery import PyQuery as pquery
-import requests
-import spacy
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from googleapiclient.discovery import build
-
-nlp = spacy.load("en_core_web_sm")
-
-SCOPES = 
-[
-    'https://www.googleapis.com/auth/gmail.modify',  # read, modify, and delete
-    'https://www.googleapis.com/auth/gmail.labels'   # edit labels
-]
-
-#function processes each entity within the document tied to the content, then
-# prints the entity and the label associated with it, then adds it to a list
-#returns list of all normal pretrained labels
-# takes a string (content) as a parameter
-def process_content(content):
-     allLabels = []
-     doc = nlp(content)
-     for ent in doc.ents:
-          print(ent.text, ent.label_)
-          allLabels.append(ent.label_)
-     
-     print("All labels of ents in doc...")
-     return allLabels
-
-
-
-#function to process custom rule entities
-#userRules variable represents a List of custom rules from user input through add-on
-#takes content and userRules as parameters
-def process_rule_entities(content, userRules):
-     allCustomLabels = []
-     doc = nlp(content)
-     for rule in userRules:
-          for ent in doc.ents:
-               if ent.text == rule:
-                    print(f"Custom rule entity found: {ent.text}")
-                    allCustomLabels.append(ent.text)
-     
-     print("All custom rule entities found...")
-     return allCustomLabels
-
-
-
+import inboxAccess.py
+import processContent.py
 
 # IMPLEMENT A FUNCTION HERE FOR CHECKING ENTITIES AND CUSTOM ENTITIES AGAINST DATABASE OF REQUESTED ENTITIES AND DESIRED ACTIONS
 # ex) Entity: "Internship"-->Action: "Star Mail" - - - - - Entity: "Food Subscription Email"-->Action: "Archive Mail"
-
-
-
-
-#function fetches the mail from the user's inbox, then processes the content
-def fetch_mail():
-     creds = None
-     if os.path.exists('token.json'):
-          creds = Credentials.from_authorized_user_file('token.json')
-     if not creds or not creds.valid:
-          creds.refresh(Request())
-     
-     with open('token.json', 'w') as token:
-          token.write(creds.to_json())
-
-     service = build('gmail', 'v1', credentials=creds)# build GMAIL API service
-
-     # Call the Gmail API to fetch INBOX messages
-     results = service.users().messages().list(userId='me', labelIds=['INBOX']).execute()
-
-     # Get the messages from the results
-     messages = results.get('messages', [])
-
-     if not messages:
-          print('No messages found.')
-    else:
-          print('Messages:')
-          for message in messages[:1]:  # Process 1 message FOR TESTING
-               # Get the message from its id
-               msg = service.users().messages().get(userId='me', id=message['id']).execute()
-               # Get the message snippet
-                
-               #payload, which contains entire message
-               #parts, which contains the message parts in plain and html text
-
-               allMessageParts = ""
-
-               for part in msg['payload']['parts']:
-                    msg_snippet = ""
-                    textForDecode = part['body']['data']
-
-                    if part['mimeType'] == 'text/plain':
-                         decodedText = base64.urlsafe_b64decode(textForDecode).decode('utf-8').strip()
-                         msg_snippet = decodedText
-
-                    elif part['mimeType'] == 'text/html':
-                         decodedHTML = base64.urlsafe_b64decode(textForDecode).decode('utf-8') # decodes into readable HTML
-                         htmlDoc = pquery(decodedHTML) # parses the HTML using PyQuery
-                         htmlContent = htmlDoc('.content .text').text() # extracts the only content/text from HTML file
-                         msg_snippet = htmlContent.strip()
-
-                    allMessageParts += msg_snippet #concatenates all message parts for processing
-
-               print("Returning message parts...")
-               return allMessageParts
-
-
-
 
 
 
